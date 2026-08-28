@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>感受与需求选择器</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, "Microsoft YaHei", sans-serif;
+      background: #f5f7f6;
+      color: #26332e;
+    }
+
+    .app {
+      max-width: 500px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 26px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #78847f;
+      margin-bottom: 28px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.05);
+    }
+
+    .card h2 {
+      margin: 0 0 5px;
+      font-size: 19px;
+    }
+
+    .hint {
+      font-size: 14px;
+      color: #8b9691;
+      margin-bottom: 15px;
+    }
+
+    .picker {
+      height: 200px;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      scrollbar-width: none;
+      position: relative;
+    }
+
+    .picker::-webkit-scrollbar {
+      display: none;
+    }
+
+    .picker::before,
+    .picker::after {
+      content: "";
+      display: block;
+      height: 76px;
+    }
+
+    .item {
+      height: 48px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      color: #9aa39f;
+      scroll-snap-align: center;
+    }
+
+    .item.selected {
+      color: #276749;
+      font-size: 22px;
+      font-weight: bold;
+      background: #edf7f1;
+      border-radius: 12px;
+    }
+
+    .result {
+      background: #eaf5ef;
+      padding: 20px;
+      border-radius: 20px;
+      line-height: 1.8;
+      font-size: 18px;
+      margin-top: 20px;
+    }
+
+    .result strong {
+      color: #276749;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <h1>🌿 感受与需求</h1>
+  <div class="subtitle">
+    看见自己的感受，也看见背后的需要
+  </div>
+
+  <div class="card">
+    <h2>💭 我现在的感受</h2>
+    <div class="hint">上下滑动，找到最接近你的感受</div>
+
+    <div class="picker" id="feelingPicker"></div>
+  </div>
+
+
+  <div class="card">
+    <h2>🌱 我现在的需求</h2>
+    <div class="hint">此刻，什么对你来说很重要？</div>
+
+    <div class="picker" id="needPicker"></div>
+  </div>
+
+
+  <div class="result">
+    我现在感到：
+    <strong id="feelingResult">烦躁</strong>
+
+    <br>
+
+    我现在需要：
+    <strong id="needResult">理解</strong>
+  </div>
+
+</div>
+
+
+<script>
+
+const feelings = [
+
+"开心",
+"喜悦",
+"满足",
+"幸福",
+"兴奋",
+"期待",
+"感激",
+"感动",
+"安心",
+"轻松",
+"自在",
+"平静",
+"舒适",
+"有希望",
+"有信心",
+
+"烦躁",
+"生气",
+"愤怒",
+"恼火",
+"不满",
+"气愤",
+"委屈",
+"受挫",
+
+"难过",
+"伤心",
+"悲伤",
+"失落",
+"失望",
+"沮丧",
+"孤独",
+"寂寞",
+"无助",
+"绝望",
+
+"焦虑",
+"紧张",
+"不安",
+"担心",
+"害怕",
+"恐惧",
+"慌张",
+"忐忑",
+
+"尴尬",
+"羞愧",
+"内疚",
+"后悔",
+"嫉妒",
+
+"疲惫",
+"疲倦",
+"困倦",
+"无聊",
+"麻木",
+"压抑",
+"沉重",
+"不知所措"
+
+];
+
+
+const needs = [
+
+"理解",
+"被倾听",
+"被看见",
+"被重视",
+"被认可",
+"尊重",
+"接纳",
+"包容",
+"信任",
+
+"关心",
+"陪伴",
+"支持",
+"帮助",
+"亲密",
+"连接",
+"归属感",
+"友谊",
+"爱",
+
+"自主",
+"自由",
+"选择",
+"空间",
+"独立",
+"掌控感",
+
+"安全",
+"稳定",
+"保护",
+"秩序",
+"确定感",
+"公平",
+
+"合作",
+"沟通",
+"坦诚",
+"真诚",
+"相互理解",
+
+"休息",
+"睡眠",
+"放松",
+"安静",
+"舒适",
+"健康",
+"食物",
+"水",
+"运动",
+
+"成长",
+"学习",
+"进步",
+"挑战",
+"创造",
+"探索",
+"成就感",
+"能力感",
+
+"乐趣",
+"娱乐",
+"幽默",
+"玩耍",
+"新鲜感",
+
+"意义",
+"目标",
+"方向",
+"价值感",
+"贡献",
+"希望",
+"自我实现"
+
+];
+
+
+let selectedFeeling = "烦躁";
+let selectedNeed = "理解";
+
+
+function createPicker(id, items, type) {
+
+  const picker = document.getElementById(id);
+
+  items.forEach(text => {
+
+    const item = document.createElement("div");
+
+    item.className = "item";
+    item.innerText = text;
+
+    picker.appendChild(item);
+
+  });
+
+
+  function updateSelection() {
+
+    const pickerRect = picker.getBoundingClientRect();
+
+    const center =
+      pickerRect.top + pickerRect.height / 2;
+
+    let closest = null;
+    let distance = Infinity;
+
+
+    picker.querySelectorAll(".item").forEach(item => {
+
+      const rect = item.getBoundingClientRect();
+
+      const itemCenter =
+        rect.top + rect.height / 2;
+
+      const d =
+        Math.abs(center - itemCenter);
+
+
+      if (d < distance) {
+
+        distance = d;
+        closest = item;
+
+      }
+
+      item.classList.remove("selected");
+
+    });
+
+
+    if (closest) {
+
+      closest.classList.add("selected");
+
+      if (type === "feeling") {
+
+        selectedFeeling = closest.innerText;
+
+        document.getElementById(
+          "feelingResult"
+        ).innerText = selectedFeeling;
+
+      } else {
+
+        selectedNeed = closest.innerText;
+
+        document.getElementById(
+          "needResult"
+        ).innerText = selectedNeed;
+
+      }
+
+    }
+
+  }
+
+
+  picker.addEventListener(
+    "scroll",
+    updateSelection
+  );
+
+
+  setTimeout(updateSelection, 100);
+
+}
+
+
+createPicker(
+  "feelingPicker",
+  feelings,
+  "feeling"
+);
+
+createPicker(
+  "needPicker",
+  needs,
+  "need"
+);
+
+</script>
+
+</body>
+</html>
