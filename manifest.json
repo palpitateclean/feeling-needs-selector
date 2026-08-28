@@ -1,0 +1,12 @@
+{
+  "name": "感受与需求选择器",
+  "short_name": "感受与需求",
+  "description": "一个帮助识别当下感受与需求的小工具",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7f6",
+  "theme_color": "#276749",
+  "lang": "zh-CN",
+  "icons": []
+}
